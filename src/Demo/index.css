@@ -1,0 +1,13 @@
+.Demo {
+  background-color: #282c34;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: calc(14px + 1vmin);
+  color: white;
+}
+
+.Demo-link {
+  color: #61dafb;
+}
