@@ -83,4 +83,11 @@ describe('tabulate', () => {
     expect(rows.map((row) => row.cells[0])).toEqual(expectedMixed)
     expect(rows.map((row) => row.cells[1])).toEqual(expectedC)
   })
+
+  test('sparse columns', () => {
+    const {columns, rows} = tabulate([{a: 1, b: 2}, {a: 3, c: 4}])
+    expect(columns).toEqual(['a', 'b', 'c'])
+    expect(rows[0].cells).toEqual([1, 2])
+    expect(rows[1].cells).toEqual([3, undefined, 4])
+  })
 })

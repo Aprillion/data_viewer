@@ -1,13 +1,11 @@
 .Demo {
   background-color: #282c34;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: calc(14px + 1vmin);
+  font-size: 16px;
   color: white;
 }
 
-.Demo-link {
-  color: #61dafb;
+.Demo header {
+  text-align: center;
+  padding: 2vh 0;
 }

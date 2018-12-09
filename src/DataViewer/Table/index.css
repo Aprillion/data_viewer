@@ -1,3 +1,70 @@
 .Table {
-  white-space: pre;
+  background: #f4f4f2;
+  color: black;
+  border-collapse: collapse;
+  width: 99%;
+  margin: 10px auto;
+  border-bottom: 1px solid #cdcdcb;
+  cursor: default;
+}
+
+.Table-row.hasChildren {
+  cursor: pointer;
+}
+
+.Table-row.even {
+  background: #eeeef2;
+}
+
+.Table th {
+  background: #ddd;
+}
+
+.Table td,
+.Table th {
+  border: 1px solid #cdcdcb;
+  border-bottom-width: 0;
+  padding: 5px 0.6vw;
+}
+
+.Table td.Table-aboveHeader {
+  font-weight: bold;
+  border: none;
+}
+
+.Table td.Table-toggle {
+  width: 0;
+}
+
+.Table-toggle svg {
+  transition: 200ms;
+}
+
+.Table-toggle.expanded svg {
+  transform: rotate(90deg);
+}
+
+.Table-child {
+  transition: padding 100ms, border 0ms;
+}
+
+.Table-child.collapsed {
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top-width: 0;
+  border-bottom-width: 0;
+  transition: padding 100ms, border 0ms 200ms;
+}
+
+.Table-child > div {
+  overflow: hidden;
+  opacity: 1;
+  max-height: 9999px;
+  transition: opacity 200ms, max-height 400ms ease-in;
+}
+
+.Table-child.collapsed > div {
+  opacity: 0;
+  max-height: 0;
+  transition: 200ms ease-out;
 }
