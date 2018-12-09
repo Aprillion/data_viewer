@@ -6,21 +6,19 @@ it('renders without crashing', () => {
   const div = document.createElement('div')
   ReactDOM.render(
     <Table
-      tableData={{
-        columns: ['a', 'b'],
-        rows: [
-          {
-            cells: [1, '2'],
-            children: [
-              {
-                header: 'child',
-                columns: ['c'],
-                rows: [],
-              },
-            ],
-          },
-        ],
-      }}
+      columns={['a', 'b']}
+      rows={[
+        {
+          cells: [1, '2'],
+          children: [
+            {
+              header: 'child',
+              columns: ['c'],
+              rows: [],
+            },
+          ],
+        },
+      ]}
     />,
     div
   )

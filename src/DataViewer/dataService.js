@@ -5,6 +5,9 @@ export const tabulate = (array = [], header = '') => {
   array.forEach((obj) => {
     // cells might be a sparse Array if column keys are inconsistent
     const row = {cells: [], children: []}
+    if (typeof obj !== 'object' || !obj) {
+      obj = {[header]: obj}
+    }
     Object.keys(obj).forEach((key) => {
       const value = obj[key]
       if (Array.isArray(value)) {
@@ -24,14 +27,22 @@ export const tabulate = (array = [], header = '') => {
   return {header, columns: Object.keys(columns), rows}
 }
 
-const useDataService = (data = [], standardize = (data) => data) => {
+const onDelete = (path) => console.log('onDelete', path)
+export const useTable = (data = [], standardize = (data) => data) => {
   const standardized = standardize(data)
-  const tableData = tabulate(standardized)
+  let tabulated
+  if (Array.isArray(standardized)) {
+    tabulated = tabulate(standardized)
+  } else if (!standardized) {
+    throw new TypeError(
+      'standardize function must return some data (use an empty array for no data)'
+    )
+  } else {
+    tabulated = tabulate([standardized])
+  }
 
   return {
-    tableData,
-    onDelete: (path) => console.log('onDelete', path),
+    ...tabulated,
+    onDelete,
   }
 }
-
-export default useDataService

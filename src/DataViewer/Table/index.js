@@ -1,19 +1,38 @@
 import React from 'react'
-import PropTypes from 'prop-types'
+import T from 'prop-types'
 import './index.css'
 
-const Table = ({tableData, onDelete}) => (
-  <div className="Table">{JSON.stringify(tableData, null, 2)}</div>
-)
+const Table = ({
+  header,
+  columns,
+  rows,
+  children,
+  visibleChildren,
+  onShowMore,
+  onShowLess,
+  onDelete,
+}) => {
+  // console.debug(header, columns)
+  return (
+    <div className="Table">
+      <div className="Table-header" />
+    </div>
+  )
+}
 
 export default Table
 
-const tableDataType = PropTypes.shape({
-  header: PropTypes.string,
-  columns: PropTypes.arrayOf(PropTypes.string).isRequired,
-  rows: PropTypes.arrayOf(PropTypes.object).isRequired,
-})
 Table.propTypes = {
-  tableData: tableDataType.isRequired,
-  onDelete: PropTypes.func,
+  header: T.string,
+  columns: T.arrayOf(T.string).isRequired,
+  rows: T.arrayOf(
+    T.shape({
+      cells: T.arrayOf(T.oneOfType([T.string, T.number])).isRequired,
+      children: T.arrayOf(() => Table.propTypes.tableData),
+    })
+  ).isRequired,
+  visibleChildren: T.number,
+  onShowMore: T.func,
+  onShowLess: T.func,
+  onDelete: T.func,
 }

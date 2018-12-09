@@ -1,13 +1,13 @@
 import React from 'react'
 import Table from './Table'
-import useDataService from './dataService'
+import {useTable} from './dataService'
 
 const DataViewer = ({data, standardize}) => {
-  const {tableData, onDelete} = useDataService(data, standardize)
+  const tableProps = useTable(data, standardize)
 
   return (
     <div className="DataViewer">
-      <Table {...{tableData, onDelete}} />
+      <Table {...tableProps} />
     </div>
   )
 }
