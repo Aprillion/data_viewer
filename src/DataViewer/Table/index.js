@@ -62,9 +62,7 @@ function Row({row, rowIndex}) {
       {row.children.map((child, childIndex) => (
         <tr key={childIndex}>
           <td className={`Table-child ${expandedClass}`} colSpan={MAX_COLSPAN}>
-            <div>
-              <Table {...child} />
-            </div>
+            <div>{visibleChildren ? <Table {...child} /> : null}</div>
           </td>
         </tr>
       ))}
