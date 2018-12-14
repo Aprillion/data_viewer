@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 import T from 'prop-types'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {faCaretRight} from '@fortawesome/free-solid-svg-icons'
+import {faCaretRight, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
 import './index.css'
 
 const MAX_COLSPAN = 42 // more than reasonable amount of max columns
@@ -24,42 +24,79 @@ function Table({header, columns, rows, onDelete}) {
         </tr>
       </thead>
       <tbody>
-        {rows.map((row, rowIndex) => (
-          <Row key={rowIndex} {...{row, rowIndex}} />
+        {rows.map(({cells, children, deleting}, rowIndex) => (
+          <Row
+            key={rowIndex}
+            {...{cells, children, deleting, rowIndex, onDelete}}
+          />
         ))}
       </tbody>
     </table>
   )
 }
 
-function Row({row, rowIndex}) {
+function Row({cells, children, deleting, rowIndex, onDelete}) {
+  // TODO: extract logic to custom hook (useRowState), convert Row to dumb component and combine in DataViewer
   const [visibleChildren, setVisibleChildren] = useState(0)
+  const [deleteStarted, setDeleteStarted] = useState(deleting)
+  const [deleteHover, setDeleteHover] = useState(false)
+
   const handleMore = () =>
     setVisibleChildren(visibleChildren ? 2 * visibleChildren : 10)
   const handleLess = () => setVisibleChildren(0)
   const handleToggle = () => (visibleChildren ? handleLess() : handleMore())
-  const hasChildren = row.children.length
+  const handleEnableDeleteHover = () => setDeleteHover(true)
+  const handleDisableDeleteHover = () => setDeleteHover(false)
+  const handleDelete = (e) => {
+    // prevent handleToggle
+    e.stopPropagation()
+    // TODO: confirmation dialog and/or undo
+    setDeleteStarted(true)
+    onDelete()
+  }
+
+  const lastCellIndex = cells.length - 1
+  const hasChildren = children.length
   const hasChildrenClass = hasChildren ? 'hasChildren' : 'noChildren'
   const rowIndexClass = (rowIndex + 1) % 2 ? 'odd' : 'even'
-  const expandedClass = visibleChildren ? 'expanded' : 'collapsed'
+  // prettier-ignore
+  const deleteClass = deleteStarted ? 'deleteStarted' : (deleteHover ? 'deleteHover' : '')
+  const expandedClass =
+    visibleChildren && !deleteStarted ? 'expanded' : 'collapsed'
 
   return (
     <>
       <tr
-        className={`Table-row ${hasChildrenClass} ${rowIndexClass}`}
+        className={`Table-row ${hasChildrenClass} ${rowIndexClass} ${deleteClass}`}
         onClick={handleToggle}
+        title={deleteStarted ? 'Removing...' : undefined}
       >
         <td className={`Table-toggle ${expandedClass}`}>
-          {hasChildren ? <FontAwesomeIcon icon={faCaretRight} /> : null}
+          {hasChildren ? (
+            <FontAwesomeIcon
+              icon={faCaretRight}
+              className="Table-expand-icon"
+            />
+          ) : null}
         </td>
         {// Array.from converts a sparse array into a dense one
-        Array.from(row.cells).map((cell, cellIndex) => (
+        Array.from(cells).map((cell, cellIndex) => (
           <td className="Table-cell" key={cellIndex}>
             {cell}
+            {cellIndex === lastCellIndex && !deleteStarted && (
+              <FontAwesomeIcon
+                icon={faTrashAlt}
+                className="Table-trash-icon"
+                onClick={handleDelete}
+                onMouseEnter={handleEnableDeleteHover}
+                onMouseLeave={handleDisableDeleteHover}
+                title="Remove item"
+              />
+            )}
           </td>
         ))}
       </tr>
-      {row.children.map((child, childIndex) => (
+      {children.map((child, childIndex) => (
         <tr key={childIndex}>
           <td className={`Table-child ${expandedClass}`} colSpan={MAX_COLSPAN}>
             <div>{visibleChildren ? <Table {...child} /> : null}</div>
@@ -72,14 +109,24 @@ function Row({row, rowIndex}) {
 
 export default Table
 
+const RowType = {
+  cells: T.arrayOf(T.node).isRequired,
+  children: T.arrayOf(() => RowType),
+  deleting: T.bool.isRequired,
+}
+
 Table.propTypes = {
   header: T.string,
   columns: T.arrayOf(T.node).isRequired,
-  rows: T.arrayOf(
-    T.shape({
-      cells: T.arrayOf(T.node).isRequired,
-      children: T.arrayOf(() => Table.propTypes.tableData),
-    })
-  ).isRequired,
+  rows: T.arrayOf(T.shape(RowType)).isRequired,
   onDelete: T.func,
+}
+Table.defaultProps = {
+  header: undefined,
+  onDelete: () => undefined,
+}
+
+Row.propTypes = {
+  ...RowType,
+  onDelete: T.func.isRequired,
 }

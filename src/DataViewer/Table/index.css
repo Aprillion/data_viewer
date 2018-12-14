@@ -12,19 +12,37 @@
   cursor: pointer;
 }
 
-.Table-row.hasChildren:hover,
-.Table-row.hasChildren:hover + tr,
-.Table-row.hasChildren:hover + tr table {
-  background: #efd;
-  transition: 200ms;
-}
-
 .Table-row.odd {
   background: #f4f4f2;
 }
 
 .Table-row.even {
   background: #eeeef2;
+}
+
+.Table-row:hover,
+.Table-row.hasChildren:hover + tr,
+.Table-row.hasChildren:hover + tr table {
+  background: #efd;
+  transition: 200ms;
+}
+
+.Table-row.deleteHover,
+.Table-row.hasChildren.deleteHover + tr,
+.Table-row.hasChildren.deleteHover + tr table {
+  background: #fdd;
+  color: #aaa;
+  transition: 500ms;
+}
+
+.Table-row.deleteStarted,
+.Table-row.hasChildren.deleteStarted + tr,
+.Table-row.hasChildren.deleteStarted + tr table {
+  background: #fcc;
+  color: #aaa;
+  opacity: 0.2;
+  text-decoration: line-through;
+  transition: 1000ms;
 }
 
 .Table th {
@@ -47,11 +65,11 @@
   width: 0;
 }
 
-.Table-toggle svg {
+.Table-expand-icon {
   transition: 200ms;
 }
 
-.Table-toggle.expanded svg {
+.expanded > .Table-expand-icon {
   transform: rotate(90deg);
 }
 
@@ -78,4 +96,32 @@
   opacity: 0;
   max-height: 0;
   transition: 200ms ease-out;
+}
+
+.Table-trash-icon {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  color: gray;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.Table td:last-child {
+  position: relative; /* for trash icon */
+}
+
+.Table-row:hover .Table-trash-icon {
+  opacity: 1;
+  pointer-events: all;
+  transition: 200ms;
+}
+
+.Table-row.deleteHover .Table-trash-icon {
+  color: #e55;
+  transform: rotate(-9deg) scale(1.2);
 }

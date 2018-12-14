@@ -4,7 +4,7 @@ export const tabulate = (array = [], header = '') => {
   let columnIndex = 0
   array.forEach((obj) => {
     // cells might be a sparse Array if column keys are inconsistent
-    const row = {cells: [], children: []}
+    const row = {cells: [], children: [], deleting: false}
     if (typeof obj !== 'object' || !obj) {
       obj = {[header]: obj}
     }

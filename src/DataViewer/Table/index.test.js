@@ -17,6 +17,7 @@ it('renders without crashing', () => {
               rows: [],
             },
           ],
+          deleting: false,
         },
       ]}
     />,
