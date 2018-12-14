@@ -8,7 +8,7 @@
   cursor: default;
 }
 
-.Table-row.hasChildren {
+.Table-row.hasChildren:not(.deleteStarted) {
   cursor: pointer;
 }
 

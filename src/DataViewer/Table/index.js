@@ -5,7 +5,7 @@ import {faCaretRight, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
 import './index.css'
 
 const MAX_COLSPAN = 42 // more than reasonable amount of max columns
-function Table({header, columns, rows, onDelete}) {
+function Table({header, columns, rows}) {
   return (
     <table className="Table">
       <thead>
@@ -24,21 +24,19 @@ function Table({header, columns, rows, onDelete}) {
         </tr>
       </thead>
       <tbody>
-        {rows.map(({cells, children, deleting}, rowIndex) => (
-          <Row
-            key={rowIndex}
-            {...{cells, children, deleting, rowIndex, onDelete}}
-          />
-        ))}
+        {rows
+          .filter((row) => !row.deleted)
+          .map((row, rowIndex) => (
+            <Row key={row.cells} {...{...row, rowIndex}} />
+          ))}
       </tbody>
     </table>
   )
 }
 
-function Row({cells, children, deleting, rowIndex, onDelete}) {
+function Row({cells, children, deleting, onDelete, rowIndex}) {
   // TODO: extract logic to custom hook (useRowState), convert Row to dumb component and combine in DataViewer
   const [visibleChildren, setVisibleChildren] = useState(0)
-  const [deleteStarted, setDeleteStarted] = useState(deleting)
   const [deleteHover, setDeleteHover] = useState(false)
 
   const handleMore = () =>
@@ -51,7 +49,6 @@ function Row({cells, children, deleting, rowIndex, onDelete}) {
     // prevent handleToggle
     e.stopPropagation()
     // TODO: confirmation dialog and/or undo
-    setDeleteStarted(true)
     onDelete()
   }
 
@@ -60,16 +57,15 @@ function Row({cells, children, deleting, rowIndex, onDelete}) {
   const hasChildrenClass = hasChildren ? 'hasChildren' : 'noChildren'
   const rowIndexClass = (rowIndex + 1) % 2 ? 'odd' : 'even'
   // prettier-ignore
-  const deleteClass = deleteStarted ? 'deleteStarted' : (deleteHover ? 'deleteHover' : '')
-  const expandedClass =
-    visibleChildren && !deleteStarted ? 'expanded' : 'collapsed'
+  const deleteClass = deleting ? 'deleteStarted' : (deleteHover ? 'deleteHover' : '')
+  const expandedClass = visibleChildren && !deleting ? 'expanded' : 'collapsed'
 
   return (
     <>
       <tr
         className={`Table-row ${hasChildrenClass} ${rowIndexClass} ${deleteClass}`}
         onClick={handleToggle}
-        title={deleteStarted ? 'Removing...' : undefined}
+        title={deleting ? 'Removing...' : undefined}
       >
         <td className={`Table-toggle ${expandedClass}`}>
           {hasChildren ? (
@@ -83,7 +79,7 @@ function Row({cells, children, deleting, rowIndex, onDelete}) {
         Array.from(cells).map((cell, cellIndex) => (
           <td className="Table-cell" key={cellIndex}>
             {cell}
-            {cellIndex === lastCellIndex && !deleteStarted && (
+            {cellIndex === lastCellIndex && !deleting && (
               <FontAwesomeIcon
                 icon={faTrashAlt}
                 className="Table-trash-icon"
@@ -113,6 +109,8 @@ const RowType = {
   cells: T.arrayOf(T.node).isRequired,
   children: T.arrayOf(() => RowType),
   deleting: T.bool.isRequired,
+  deleted: T.bool.isRequired,
+  onDelete: T.func.isRequired,
 }
 
 Table.propTypes = {
@@ -128,5 +126,4 @@ Table.defaultProps = {
 
 Row.propTypes = {
   ...RowType,
-  onDelete: T.func.isRequired,
 }

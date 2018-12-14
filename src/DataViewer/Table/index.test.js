@@ -18,6 +18,8 @@ it('renders without crashing', () => {
             },
           ],
           deleting: false,
+          deleted: false,
+          onDelete: () => undefined,
         },
       ]}
     />,
