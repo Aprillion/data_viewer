@@ -1,28 +1,22 @@
 import {useState, useEffect} from 'react'
 
-const noop = () => undefined
+const identityFn = (x) => x
+const delay = (ms) => {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
-// TODO: convert `onDelete` from OOP interface modifying object in place to an immutable reduce function
-//       and remove `forceRender`
-export const tabulate = (array = [], header = '', forceRender = noop) => {
+export const tabulate = (array = [], header = '') => {
   const columns = {}
   const rows = []
   let columnIndex = 0
-  array.forEach((obj) => {
+  array.forEach((obj, objIndex) => {
     // cells might be a sparse Array if column keys are inconsistent
     const row = {
+      rowIndex: objIndex,
       cells: [],
       children: [],
       deleting: false,
       deleted: false,
-      onDelete: () => {
-        row.deleting = true
-        forceRender()
-        setTimeout(() => {
-          row.deleted = true
-          forceRender()
-        }, 1000)
-      },
     }
     if (typeof obj !== 'object' || !obj) {
       obj = {[header]: obj}
@@ -30,7 +24,7 @@ export const tabulate = (array = [], header = '', forceRender = noop) => {
     Object.keys(obj).forEach((key) => {
       const value = obj[key]
       if (Array.isArray(value)) {
-        row.children.push(tabulate(value, key, forceRender))
+        row.children.push(tabulate(value, key))
         return
       }
       if (columns[key] === undefined) {
@@ -46,29 +40,65 @@ export const tabulate = (array = [], header = '', forceRender = noop) => {
   return {header, columns: Object.keys(columns), rows}
 }
 
-export const useTable = (data = [], standardize = (data) => data) => {
+export const useTable = (
+  data = [],
+  standardize = identityFn,
+  deleteOnServer
+) => {
   const [tabulated, setTabulated] = useState({
     header: '',
     columns: [],
     rows: [],
   })
-  const [dataVersion, setDataVersion] = useState(0)
-  const forceRender = () => setDataVersion(dataVersion + 1)
 
   useEffect(() => {
     const standardized = standardize(data)
     if (Array.isArray(standardized)) {
-      setTabulated(tabulate(standardized, '', forceRender))
+      setTabulated(tabulate(standardized, ''))
     } else if (!standardized) {
       throw new TypeError(
         'standardize function must return some data (use an empty array for no data)'
       )
     } else {
-      setTabulated(tabulate([standardized], '', forceRender))
+      setTabulated(tabulate([standardized], ''))
     }
   }, [])
 
+  const forceUpdate = () => setTabulated(tabulated)
+
+  // TODO: use some id insted of mutating nested `row` object, need to be set up in `standardize`
+  const onDelete = (columns, row) => {
+    row.deleting = true
+    forceUpdate()
+    let serverPromise = Promise.resolve()
+    // TODO: set up deleteOnServer in config, check if confirmation dialog is needed
+    if (deleteOnServer) {
+      const returned = deleteOnServer(
+        [...columns],
+        [...row.cells],
+        row.children.map((c) => c.rows.length)
+      )
+      if (returned && returned.then) {
+        serverPromise = returned
+      }
+    }
+    Promise.all([serverPromise, delay(500)])
+      .then(() => {
+        // forward compatibile with undo feature
+        row.deleted = true
+        forceUpdate()
+      })
+      .catch((er) => {
+        // TODO: ask designer for modal or other error indicator
+        alert(`Removal failed\n${er}`)
+        console.error(er)
+        row.deleting = false
+        forceUpdate()
+      })
+  }
+
   return {
     ...tabulated,
+    onDelete,
   }
 }

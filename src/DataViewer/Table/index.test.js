@@ -9,6 +9,7 @@ it('renders without crashing', () => {
       columns={['a', 'b']}
       rows={[
         {
+          rowIndex: 0,
           cells: [1, '2'],
           children: [
             {
@@ -19,9 +20,9 @@ it('renders without crashing', () => {
           ],
           deleting: false,
           deleted: false,
-          onDelete: () => undefined,
         },
       ]}
+      onDelete={() => undefined}
     />,
     div
   )

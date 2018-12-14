@@ -5,7 +5,7 @@ import {faCaretRight, faTrashAlt} from '@fortawesome/free-solid-svg-icons'
 import './index.css'
 
 const MAX_COLSPAN = 42 // more than reasonable amount of max columns
-function Table({header, columns, rows}) {
+function Table({header, columns, rows, onDelete}) {
   return (
     <table className="Table">
       <thead>
@@ -27,14 +27,16 @@ function Table({header, columns, rows}) {
         {rows
           .filter((row) => !row.deleted)
           .map((row, rowIndex) => (
-            <Row key={row.cells} {...{...row, rowIndex}} />
+            <Row key={row.cells} {...{columns, row, rowIndex, onDelete}} />
           ))}
       </tbody>
     </table>
   )
 }
 
-function Row({cells, children, deleting, onDelete, rowIndex}) {
+function Row({columns, row, rowIndex, onDelete}) {
+  const {cells, children, deleting} = row
+
   // TODO: extract logic to custom hook (useRowState), convert Row to dumb component and combine in DataViewer
   const [visibleChildren, setVisibleChildren] = useState(0)
   const [deleteHover, setDeleteHover] = useState(false)
@@ -49,16 +51,20 @@ function Row({cells, children, deleting, onDelete, rowIndex}) {
     // prevent handleToggle
     e.stopPropagation()
     // TODO: confirmation dialog and/or undo
-    onDelete()
+    // TODO: use an explicit identifier instead of object identity
+    onDelete(columns, row)
   }
 
   const lastCellIndex = cells.length - 1
-  const hasChildren = children.length
+  const hasChildren = children.filter(({rows: childRows}) =>
+    childRows.some((r) => !r.deleted)
+  ).length
   const hasChildrenClass = hasChildren ? 'hasChildren' : 'noChildren'
   const rowIndexClass = (rowIndex + 1) % 2 ? 'odd' : 'even'
   // prettier-ignore
   const deleteClass = deleting ? 'deleteStarted' : (deleteHover ? 'deleteHover' : '')
-  const expandedClass = visibleChildren && !deleting ? 'expanded' : 'collapsed'
+  const expandedClass =
+    hasChildren && visibleChildren && !deleting ? 'expanded' : 'collapsed'
 
   return (
     <>
@@ -95,7 +101,9 @@ function Row({cells, children, deleting, onDelete, rowIndex}) {
       {children.map((child, childIndex) => (
         <tr key={childIndex}>
           <td className={`Table-child ${expandedClass}`} colSpan={MAX_COLSPAN}>
-            <div>{visibleChildren ? <Table {...child} /> : null}</div>
+            <div>
+              {visibleChildren ? <Table {...{...child, onDelete}} /> : null}
+            </div>
           </td>
         </tr>
       ))}
@@ -110,20 +118,21 @@ const RowType = {
   children: T.arrayOf(() => RowType),
   deleting: T.bool.isRequired,
   deleted: T.bool.isRequired,
-  onDelete: T.func.isRequired,
 }
 
 Table.propTypes = {
   header: T.string,
   columns: T.arrayOf(T.node).isRequired,
   rows: T.arrayOf(T.shape(RowType)).isRequired,
-  onDelete: T.func,
+  onDelete: T.func.isRequired,
 }
 Table.defaultProps = {
   header: undefined,
-  onDelete: () => undefined,
 }
 
 Row.propTypes = {
-  ...RowType,
+  columns: T.arrayOf(T.node).isRequired,
+  row: T.shape(RowType),
+  rowIndex: T.number.isRequired,
+  onDelete: T.func.isRequired,
 }
