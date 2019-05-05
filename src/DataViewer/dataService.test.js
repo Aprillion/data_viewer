@@ -1,22 +1,9 @@
-import {useTable, tabulate} from './dataService'
+import {renderHook} from 'react-hooks-testing-library'
+import {useTable as rawUseTable, tabulate} from './dataService'
 
-// avoid react Invariant violation,
-// on top of file because beforeAll/beforeEach were too late for react 16.7.0-alpha.2
-jest.mock('react', () => ({
-  useState: (() => {
-    let state
-    const setState = (nextState) => {
-      state = nextState
-    }
-    return (initial) => {
-      if (state === undefined) {
-        state = initial
-      }
-      return [state, setState]
-    }
-  })(),
-  useEffect: (f) => f(),
-}))
+function useTable() {
+  return renderHook(() => rawUseTable.apply(null, arguments)).result.current
+}
 
 describe('useDataService', () => {
   test('undefined', () => {
@@ -27,23 +14,22 @@ describe('useDataService', () => {
   })
 
   // TODO: figure out how to test custom hooks non-initial state...
-  xtest('string', () => {
-    console.warn(useTable('a'))
+  test('string', () => {
     expect(useTable('a').rows[0].cells).toEqual(useTable(['a']).rows[0].cells)
   })
 
-  xtest('number', () => {
+  test('number', () => {
     expect(useTable(1).rows[0].cells).toEqual(useTable([1]).rows[0].cells)
   })
 
-  xtest('array', () => {
+  test('array', () => {
     const {header, columns, rows} = useTable(['a', 1])
     expect(header).toEqual('')
     expect(columns).toEqual([''])
     expect(rows.map((r) => r.cells[0])).toEqual(['a', 1])
   })
 
-  xtest('object', () => {
+  test('object', () => {
     const {header, columns, rows} = useTable({a: [1, 2, 3]})
     expect(header).toEqual('')
     expect(columns).toEqual([])
@@ -57,7 +43,6 @@ describe('useDataService', () => {
         },
       ],
     })
-    expect(typeof rows[0].onDelete).toBe('function')
   })
 })
 

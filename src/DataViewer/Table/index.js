@@ -56,8 +56,8 @@ function Row({columns, row, rowIndex, onDelete}) {
   }
 
   const lastCellIndex = cells.length - 1
-  const hasChildren = children.filter(({rows: childRows}) =>
-    childRows.some((r) => !r.deleted)
+  const hasChildren = children.filter(
+    ({rows: childRows}) => childRows && childRows.some((r) => !r.deleted)
   ).length
   const hasChildrenClass = hasChildren ? 'hasChildren' : 'noChildren'
   const rowIndexClass = (rowIndex + 1) % 2 ? 'odd' : 'even'
