@@ -62,7 +62,7 @@ export const useTable = (
     } else {
       setTabulated(tabulate([standardized], ''))
     }
-  }, [])
+  }, [data, standardize])
 
   const forceUpdate = () => setTabulated(tabulated)
 
