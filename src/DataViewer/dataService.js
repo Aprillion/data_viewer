@@ -45,33 +45,29 @@ export const useTable = (
   standardize = identityFn,
   deleteOnServer
 ) => {
-  const [tabulated, setTabulated] = useState({
-    header: '',
-    columns: [],
-    rows: [],
-  })
+  const [header, setHeader] = useState('')
+  const [columns, setColumns] = useState([])
+  const [rows, setRows] = useState([])
 
   useEffect(() => {
-    const standardized = standardize(data)
-    if (Array.isArray(standardized)) {
-      setTabulated(tabulate(standardized, ''))
-    } else if (!standardized) {
+    let standardized = standardize(data)
+    if (!standardized) {
       throw new TypeError(
         'standardize function must return some data (use an empty array for no data)'
       )
-    } else {
-      setTabulated(tabulate([standardized], ''))
+    } else if (!Array.isArray(standardized)) {
+      standardized = [standardized]
     }
+    const {header: h, columns: c, rows: r} = tabulate(standardized, '')
+    setHeader(h)
+    setColumns(c)
+    setRows(r)
   }, [data, standardize])
 
-  const forceUpdate = () => setTabulated(tabulated)
-
-  // TODO: use some id insted of mutating nested `row` object, need to be set up in `standardize`
   const onDelete = (columns, row) => {
+    // using mutable objects to work around recursive data structure complexity
     row.deleting = true
-    forceUpdate()
     let serverPromise = Promise.resolve()
-    // TODO: set up deleteOnServer in config, check if confirmation dialog is needed
     if (deleteOnServer) {
       const returned = deleteOnServer(
         [...columns],
@@ -86,19 +82,14 @@ export const useTable = (
       .then(() => {
         // forward compatibile with undo feature
         row.deleted = true
-        forceUpdate()
+        setRows([...rows])
       })
       .catch((er) => {
         // TODO: ask designer for modal or other error indicator
         alert(`Removal failed\n${er}`)
         console.error(er)
-        row.deleting = false
-        forceUpdate()
       })
   }
 
-  return {
-    ...tabulated,
-    onDelete,
-  }
+  return {header, columns, rows, onDelete}
 }
